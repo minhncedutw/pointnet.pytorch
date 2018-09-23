@@ -5,12 +5,12 @@ This repo is implementation for PointNet(https://arxiv.org/abs/1612.00593) in py
 # Download data and running
 
 ```
+conda env create -f env.yml # create environment
 bash build.sh #build C++ code for visualization
 bash download.sh #download dataset
-python train_classification.py #train 3D model classification
-python python train_segmentation.py # train 3D model segmentaion
 
-python show_seg.py --model seg/seg_model_20.pth  # show segmentation results
+python python train_segmentation.py # train 3D model segmentaion
+python show_seg.py --model seg/seg_model_2.pth  # show segmentation results
 ```
 
 # Performance
