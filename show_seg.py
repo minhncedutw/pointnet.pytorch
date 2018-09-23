@@ -32,7 +32,7 @@ parser.add_argument('--idx', type=int, default = 0,   help='model index')
 opt = parser.parse_args()
 print (opt)
 
-d = PartDataset(root = 'shapenetcore_partanno_segmentation_benchmark_v0', class_choice = ['Chair'], train = False)
+d = PartDataset(root = 'shapenetcore_partanno_segmentation_benchmark_v0', class_choice = ['tools'], train = False)
 
 idx = opt.idx
 
@@ -49,7 +49,7 @@ cmap = plt.cm.get_cmap("hsv", 10)
 cmap = np.array([cmap(i) for i in range(10)])[:,:3]
 gt = cmap[seg.numpy() - 1, :]
 
-classifier = PointNetDenseCls(k = 4)
+classifier = PointNetDenseCls(k = 3)
 classifier.load_state_dict(torch.load(opt.model))
 classifier.eval()
 
