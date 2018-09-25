@@ -6,7 +6,7 @@ This repo is implementation for PointNet(https://arxiv.org/abs/1612.00593) in py
 
 ### 1. Create environment
 ```
-conda env create -f env.yml # create environment
+conda env create -f environment.yml # create environment
 source activate pointnet_pytorch # activate installed environment
 ```
 
