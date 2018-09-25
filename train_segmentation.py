@@ -45,7 +45,7 @@ testdataloader = torch.utils.data.DataLoader(test_dataset, batch_size=opt.batchS
                                           shuffle=True, num_workers=int(opt.workers))
 
 print(len(dataset), len(test_dataset))
-num_classes = 3
+num_classes = 10
 print('classes', num_classes)
 try:
     os.makedirs(opt.outf)

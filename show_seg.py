@@ -20,36 +20,31 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 
 
-#showpoints(np.random.randn(2500,3), c1 = np.random.uniform(0,1,size = (2500)))
-
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--model', type=str, default = '',  help='model path')
 parser.add_argument('--idx', type=int, default = 0,   help='model index')
 
-
-
 opt = parser.parse_args()
 print (opt)
 
-d = PartDataset(root = 'shapenetcore_partanno_segmentation_benchmark_v0', class_choice = ['tools'], train = False)
+
+num_points = 2700
+d = PartDataset(root='shapenetcore_partanno_segmentation_benchmark_v0', npoints=num_points, class_choice=['tools'], train=False)
 
 idx = opt.idx
 
 print("model %d/%d" %( idx, len(d)))
 
-point, seg = d[idx]
-print(point.size(), seg.size())
+point_np, seg = d[idx]
+point = torch.from_numpy(point_np)
+point_np[:, 2] *= -1
 
-point_np = point.numpy()
-
-
-
-cmap = plt.cm.get_cmap("hsv", 10)
+cmap = plt.cm.get_cmap("hsv", 5)
 cmap = np.array([cmap(i) for i in range(10)])[:,:3]
-gt = cmap[seg.numpy() - 1, :]
+gt = cmap[seg - 1, :]
 
-classifier = PointNetDenseCls(k = 3)
+classifier = PointNetDenseCls(num_points=num_points, k=10)
 classifier.load_state_dict(torch.load(opt.model))
 classifier.eval()
 
@@ -64,5 +59,5 @@ print(pred_choice)
 pred_color = cmap[pred_choice.numpy()[0], :]
 
 #print(pred_color.shape)
-showpoints(point_np, gt, pred_color)
+showpoints(point_np, gt, pred_color, ballradius=4)
 
