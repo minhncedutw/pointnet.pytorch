@@ -22,8 +22,8 @@ import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--model', type=str, default = '',  help='model path')
-parser.add_argument('--idx', type=int, default = 0,   help='model index')
+parser.add_argument('--model', type=str, default='', help='model path')
+parser.add_argument('--idx', type=int, default=0, help='model index')
 
 opt = parser.parse_args()
 print (opt)
