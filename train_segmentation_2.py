@@ -64,6 +64,8 @@ optimizer = optim.SGD(classifier.parameters(), lr=0.01, momentum=0.9)
 classifier.cuda()
 
 num_batch = len(dataset)/opt.batchSize
+num_test_batch = len(test_dataset)/opt.batchSize
+
 
 max_acc = -1
 for epoch in range(opt.nepoch):
@@ -83,23 +85,29 @@ for epoch in range(opt.nepoch):
         pred_choice = pred.data.max(1)[1]
         correct = pred_choice.eq(target.data).cpu().sum()
         print('[%d: %d/%d] train loss: %f accuracy: %f' %(epoch, i, num_batch, loss.item(), correct.item()/float(list(target.shape)[0])))
-        
-        if i % 10 == 0:
-            j, data = next(enumerate(testdataloader, 0))
-            points, target = data
-            points, target = Variable(points), Variable(target)
-            points = points.transpose(2,1) 
-            points, target = points.cuda(), target.cuda()   
-            pred, _ = classifier(points)
-            pred = pred.view(-1, num_classes)
-            target = target.view(-1,1)[:,0] - 1
 
-            loss = F.nll_loss(pred, target)
-            pred_choice = pred.data.max(1)[1]
-            correct = pred_choice.eq(target.data).cpu().sum()
-            print('[%d: %d/%d] %s loss: %f accuracy: %f' %(epoch, i, num_batch, blue('test'), loss.item(), correct.item()/float(list(target.shape)[0])))
-            if (correct.item()/float(list(target.shape)[0]) > max_acc):
-                max_acc = correct.item() / float(list(target.shape)[0])
-                torch.save(classifier.state_dict(), '%s/seg_model_%d_%.3f.pth' % (opt.outf, epoch, max_acc))
-    
-    # torch.save(classifier.state_dict(), '%s/seg_model_%d.pth' % (opt.outf, epoch))
+    correct_percents = []
+    for i, data in enumerate(testdataloader, 0):
+        points, target = data
+        points, target = Variable(points), Variable(target)
+        points = points.transpose(2, 1)
+        points, target = points.cuda(), target.cuda()
+        optimizer.zero_grad()
+        pred, _ = classifier(points)
+        pred = pred.view(-1, num_classes)
+        target = target.view(-1,1)[:,0] - 1
+        #print(pred.size(), target.size())
+        loss = F.nll_loss(pred, target)
+        loss.backward()
+        optimizer.step()
+        pred_choice = pred.data.max(1)[1]
+        correct = pred_choice.eq(target.data).cpu().sum()
+        correct_percent = correct.item()/float(list(target.shape)[0])
+        correct_percents.append(correct_percent)
+        print('[%d: %d/%d] train loss: %f accuracy: %f' %(epoch, i, num_test_batch, loss.item(), correct_percent))
+    average_correct_percent = np.sum(correct_percents) / len(correct_percents)
+    print('[%d: ] average accuracy: %f' % (epoch, correct_percent))
+    if average_correct_percent > max_acc:
+        max_acc = average_correct_percent
+        torch.save(classifier.state_dict(), '%s/seg_model_%d_%.3f.pth' % (opt.outf, epoch, max_acc))
+        print('Saved model')
