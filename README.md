@@ -11,9 +11,8 @@ source activate pointnet_pytorch # activate installed environment
 ```
 
 ### 2. Download data
-```
-bash download.sh #download dataset
-```
+1. [Download data here](https://drive.google.com/open?id=1nlDdKajIjFLqHlMe3_OMrlgUxPT7BFpz)
+1. Extract to pointnet.pytorch project folder, we will obtain a folder of data named `shapenetcore_partanno_segmentation_benchmark_v0`
 
 ### 3. Train segmentation and classification
 ```
