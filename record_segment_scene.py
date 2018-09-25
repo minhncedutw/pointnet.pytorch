@@ -109,7 +109,7 @@ def main(argv=None):
 
     ## Load PointNet config
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='', help='model path')
+    parser.add_argument('--model', type=str, default='./seg/seg_model_1.pth', help='model path')
     opt = parser.parse_args()
     print(opt)
 
@@ -126,7 +126,7 @@ def main(argv=None):
 
 
     ## Initialize OpenNi
-    dist = '/OpenNI-Windows-x64-2.3/Redist'
+    dist = './OpenNI-Linux-x64-2.3/Redist'
     openni2.initialize(dist)
     if (openni2.is_initialized()):
         print("openNI2 initialized")
@@ -207,17 +207,17 @@ def main(argv=None):
             s += 1  # uncomment for multiple captures
 
             ### Get pointcloud of scene for prediction
-            points_np = np.array(points_content)[:, :3]
+            points_np = (np.array(points_content)[:, :3]).astype(np.float32)
             choice = np.random.choice(len(points_np), num_points, replace=True)
             points_np = points_np[choice, :]
             points_torch = torch.from_numpy(points_np)
 
-            point = point.transpose(1, 0).contiguous()
+            points_torch = points_torch.transpose(1, 0).contiguous()
 
-            point = Variable(point.view(1, point.size()[0], point.size()[1]))
+            points_torch = Variable(points_torch.view(1, points_torch.size()[0], points_torch.size()[1]))
 
             ### Predict to segment scene
-            pred, _ = classifier(point)
+            pred, _ = classifier(points_torch)
             pred_choice = pred.data.max(2)[1]
             print(pred_choice)
 
