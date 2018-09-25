@@ -22,7 +22,7 @@ python train_segmentation.py # train 3D model segmentaion
 ### 4. Visualize result
 ```
 bash build.sh # build C++ code for visualization
-python show_seg.py --model seg/seg_model_2.pth --idx 5 # show segmentation results
+python show_seg.py --model seg/seg_model_1.pth --idx 5 # show segmentation results
 ```
 
 # Performance
