@@ -2,14 +2,26 @@
 This repo is implementation for PointNet(https://arxiv.org/abs/1612.00593) in pytorch. The model is in `pointnet.py`.
 
 
-# Download data and running
+# Running steps
 
+### 1. Create environment
 ```
 conda env create -f env.yml # create environment
-bash build.sh #build C++ code for visualization
-bash download.sh #download dataset
+```
 
+### 2. Download data
+```
+bash download.sh #download dataset
+```
+
+### 3. Train segmentation and classification
+```
 python train_segmentation.py # train 3D model segmentaion
+```
+
+### 4. Visualize result
+```
+bash build.sh # build C++ code for visualization
 python show_seg.py --model seg/seg_model_2.pth  # show segmentation results
 ```
 
