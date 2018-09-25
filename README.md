@@ -9,7 +9,7 @@ conda env create -f env.yml # create environment
 bash build.sh #build C++ code for visualization
 bash download.sh #download dataset
 
-python python train_segmentation.py # train 3D model segmentaion
+python train_segmentation.py # train 3D model segmentaion
 python show_seg.py --model seg/seg_model_2.pth  # show segmentation results
 ```
 

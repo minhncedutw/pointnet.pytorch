@@ -19,7 +19,7 @@ import torch.nn.functional as F
 
 
 class STN3d(nn.Module):
-    def __init__(self, num_points = 2500):
+    def __init__(self, num_points=2500):
         super(STN3d, self).__init__()
         self.num_points = num_points
         self.conv1 = torch.nn.Conv1d(3, 64, 1)
@@ -59,7 +59,7 @@ class STN3d(nn.Module):
 
 
 class PointNetfeat(nn.Module):
-    def __init__(self, num_points = 2500, global_feat = True):
+    def __init__(self, num_points=2500, global_feat=True):
         super(PointNetfeat, self).__init__()
         self.stn = STN3d(num_points = num_points)
         self.conv1 = torch.nn.Conv1d(3, 64, 1)
@@ -90,7 +90,7 @@ class PointNetfeat(nn.Module):
             return torch.cat([x, pointfeat], 1), trans
 
 class PointNetCls(nn.Module):
-    def __init__(self, num_points = 2500, k = 2):
+    def __init__(self, num_points=2500, k=2):
         super(PointNetCls, self).__init__()
         self.num_points = num_points
         self.feat = PointNetfeat(num_points, global_feat=True)
@@ -108,7 +108,7 @@ class PointNetCls(nn.Module):
         return F.log_softmax(x, dim=-1), trans
 
 class PointNetDenseCls(nn.Module):
-    def __init__(self, num_points = 2500, k = 2):
+    def __init__(self, num_points=2500, k=2):
         super(PointNetDenseCls, self).__init__()
         self.num_points = num_points
         self.k = k
