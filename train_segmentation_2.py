@@ -106,7 +106,7 @@ for epoch in range(opt.nepoch):
         correct_percents.append(correct_percent)
         print('[%d: %d/%d] train loss: %f accuracy: %f' %(epoch, i, num_test_batch, loss.item(), correct_percent))
     average_correct_percent = np.sum(correct_percents) / len(correct_percents)
-    print('[%d: ] average accuracy: %f' % (epoch, correct_percent))
+    print('[%d: ] average accuracy: %f' % (epoch, average_correct_percent))
     if average_correct_percent > max_acc:
         max_acc = average_correct_percent
         torch.save(classifier.state_dict(), '%s/seg_model_%d_%.3f.pth' % (opt.outf, epoch, max_acc))
