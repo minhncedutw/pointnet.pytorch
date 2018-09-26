@@ -1,5 +1,5 @@
 '''
-    File name: record & segment scene
+    File name: CAMERA_find color range
     Author: minhnc
     Date created(MM/DD/YYYY): 9/22/2018
     Last modified(MM/DD/YYYY HH:MM): 9/22/2018 10:42 AM
@@ -42,10 +42,63 @@ from pointnet import PointNetDenseCls
 #==============================================================================
 # Constant Definitions
 #==============================================================================
+max_value = 255
+max_value_H = 360//2
+low_H = 0
+low_S = 0
+low_V = 0
+high_H = max_value_H
+high_S = max_value
+high_V = max_value
+window_capture_name = 'Video Capture'
+window_detection_name = 'Object Detection'
+low_H_name = 'Low H'
+low_S_name = 'Low S'
+low_V_name = 'Low V'
+high_H_name = 'High H'
+high_S_name = 'High S'
+high_V_name = 'High V'
 
 #==============================================================================
 # Function Definitions
 #==============================================================================
+def on_low_H_thresh_trackbar(val):
+    global low_H
+    global high_H
+    low_H = val
+    low_H = min(high_H-1, low_H)
+    cv2.setTrackbarPos(low_H_name, window_detection_name, low_H)
+def on_high_H_thresh_trackbar(val):
+    global low_H
+    global high_H
+    high_H = val
+    high_H = max(high_H, low_H+1)
+    cv2.setTrackbarPos(high_H_name, window_detection_name, high_H)
+def on_low_S_thresh_trackbar(val):
+    global low_S
+    global high_S
+    low_S = val
+    low_S = min(high_S-1, low_S)
+    cv2.setTrackbarPos(low_S_name, window_detection_name, low_S)
+def on_high_S_thresh_trackbar(val):
+    global low_S
+    global high_S
+    high_S = val
+    high_S = max(high_S, low_S+1)
+    cv2.setTrackbarPos(high_S_name, window_detection_name, high_S)
+def on_low_V_thresh_trackbar(val):
+    global low_V
+    global high_V
+    low_V = val
+    low_V = min(high_V-1, low_V)
+    cv2.setTrackbarPos(low_V_name, window_detection_name, low_V)
+def on_high_V_thresh_trackbar(val):
+    global low_V
+    global high_V
+    high_V = val
+    high_V = max(high_V, low_V+1)
+    cv2.setTrackbarPos(high_V_name, window_detection_name, high_V)
+
 def get_rgb(rgb_stream, h, w):
     """
     Returns numpy 3L ndarray to represent the rgb image.
@@ -73,56 +126,20 @@ def get_depth(depth_stream, h, w):
     d4d = 255 - cv2.cvtColor(d4d,cv2.COLOR_GRAY2RGB)
     return dmap, d4d
 
-def generate_ply_from_rgbd(rgb, depth, config):
-    points = []
-    points_str = []
-    for v in range(rgb.shape[1]):
-        for u in range(rgb.shape[0]):
-            color = rgb[u, v]
-            Z = depth[u, v] / config['SCALING_FACTOR']
-            if Z == 0:
-                continue
-            X = (u - config['CENTER_X']) * Z / config['FOCAL_LENGTH']
-            Y = (v - config['CENTER_Y']) * Z / config['FOCAL_LENGTH']
-            points.append([X, Y, Z, color[0], color[1], color[2], 0])
-            points_str.append(f"{X:f} {Y:f} {Z:f} {color[0]:d} {color[1]:d} {color[2]:d} 0\n")
-    ply = f"""\
-ply
-format ascii 1.0
-element vertex {len(points_str):d}
-property float x
-property float y
-property float z
-property uchar red
-property uchar green
-property uchar blue
-property uchar alpha
-end_header
-{''.join(points_str)}\
-"""
-    return ply, points
+
 #==============================================================================
 # Main function
 #==============================================================================
 def main(argv=None):
     print('Hello! This is XXXXXX Program')
 
-    ## Load PointNet config
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='./seg/seg_model_1.pth', help='model path')
-    opt = parser.parse_args()
-    print(opt)
-
-    ## Load PointNet model
-    num_points = 2700
-    classifier = PointNetDenseCls(num_points=num_points, k=10)
-    classifier.load_state_dict(torch.load(opt.model))
-    classifier.eval()
-
-    ### Config visualization
-    cmap = plt.cm.get_cmap("hsv", 5)
-    cmap = np.array([cmap(i) for i in range(10)])[:, :3]
-    # gt = cmap[seg - 1, :]
+    cv2.namedWindow(window_detection_name)
+    cv2.createTrackbar(low_H_name, window_detection_name, low_H, max_value_H, on_low_H_thresh_trackbar)
+    cv2.createTrackbar(high_H_name, window_detection_name, high_H, max_value_H, on_high_H_thresh_trackbar)
+    cv2.createTrackbar(low_S_name, window_detection_name, low_S, max_value, on_low_S_thresh_trackbar)
+    cv2.createTrackbar(high_S_name, window_detection_name, high_S, max_value, on_high_S_thresh_trackbar)
+    cv2.createTrackbar(low_V_name, window_detection_name, low_V, max_value, on_low_V_thresh_trackbar)
+    cv2.createTrackbar(high_V_name, window_detection_name, high_V, max_value, on_high_V_thresh_trackbar)
 
 
     ## Initialize OpenNi
@@ -173,18 +190,7 @@ def main(argv=None):
     ## IMPORTANT: ALIGN DEPTH2RGB (depth wrapped to match rgb stream)
     dev.set_image_registration_mode(openni2.IMAGE_REGISTRATION_DEPTH_TO_COLOR)
 
-    saving_folder_path = './shapenetcore_partanno_segmentation_benchmark_v0/tools/'
-    if not os.path.exists(saving_folder_path):
-        os.makedirs(saving_folder_path+'RGB')
-        os.makedirs(saving_folder_path+'D')
-        os.makedirs(saving_folder_path+'PC')
-        os.makedirs(saving_folder_path+'points')
-        os.makedirs(saving_folder_path+'points_label')
-
-    from config import CAMERA_CONFIG
-
     ## main loop
-    s = 1000
     done = False
     while not done:
         key = cv2.waitKey(1) & 255
@@ -192,37 +198,6 @@ def main(argv=None):
         if key == 27:  # terminate
             print("\tESC key detected!")
             done = True
-        elif chr(key) == 's':  # screen capture
-            print("\ts key detected. Saving image {}".format(s))
-
-
-            rgb = rgb[60:180, 80:240, :]
-            dmap = dmap[60:180, 80:240]
-            ply_content, points_content = generate_ply_from_rgbd(rgb=rgb, depth=dmap, config=CAMERA_CONFIG)
-
-            cv2.imwrite(saving_folder_path + "RGB/" + str(s) + '.png', rgb)
-            cv2.imwrite(saving_folder_path + "D/" + str(s) + '.png', dmap)
-            print(rgb.shape, dmap.shape)
-            print(type(rgb), type(dmap))
-            with open(saving_folder_path + "PC/" + str(s) + '.ply', 'w') as output:
-                output.write(ply_content)
-            print(saving_folder_path + "PC/" + str(s) + '.ply', ' done')
-            s += 1  # uncomment for multiple captures
-
-            # ### Get pointcloud of scene for prediction
-            # points_np = (np.array(points_content)[:, :3]).astype(np.float32)
-            # choice = np.random.choice(len(points_np), num_points, replace=True)
-            # points_np = points_np[choice, :]
-            # points_torch = torch.from_numpy(points_np)
-            #
-            # points_torch = points_torch.transpose(1, 0).contiguous()
-            #
-            # points_torch = Variable(points_torch.view(1, points_torch.size()[0], points_torch.size()[1]))
-            #
-            # ### Predict to segment scene
-            # pred, _ = classifier(points_torch)
-            # pred_choice = pred.data.max(2)[1]
-            # print(pred_choice)
 
         ## Streams
         # RGB
@@ -233,8 +208,23 @@ def main(argv=None):
 
         # canvas
         canvas = np.hstack((rgb, d4d))
+        cv2.rectangle(canvas, (119, 79), (202, 162), (0, 255, 0), 1)
+        cv2.rectangle(canvas, (119 + 320, 79), (202 + 320, 162), (0, 255, 0), 1)
         ## Display the stream syde-by-side
         cv2.imshow('depth || rgb', canvas)
+
+        hsv = cv2.cvtColor(src=rgb, code=cv2.COLOR_BGR2HSV)
+
+        ### for black
+        # tblack = cv2.inRange(hsv, (low_H, low_S, low_V), (high_H, high_S, high_V))
+        tblack = cv2.inRange(hsv, (100, 130, 0), (130, 220, 150))
+
+        ### for white
+        # twhite = cv2.inRange(hsv, (low_H, low_S, low_V), (high_H, high_S, high_V))
+        twhite = cv2.inRange(hsv, (0, 0, 230, 0), (160, 200, 255, 0))
+
+        cv2.imshow('black', tblack)
+        cv2.imshow('white', twhite)
     # end while
 
     ## Release resources

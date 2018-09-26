@@ -42,6 +42,22 @@ from pointnet import PointNetDenseCls
 #==============================================================================
 # Constant Definitions
 #==============================================================================
+max_value = 255
+max_value_H = 360//2
+low_H = 0
+low_S = 0
+low_V = 0
+high_H = max_value_H
+high_S = max_value
+high_V = max_value
+window_capture_name = 'Video Capture'
+window_detection_name = 'Object Detection'
+low_H_name = 'Low H'
+low_S_name = 'Low S'
+low_V_name = 'Low V'
+high_H_name = 'High H'
+high_S_name = 'High S'
+high_V_name = 'High V'
 
 #==============================================================================
 # Function Definitions
@@ -100,30 +116,14 @@ property uchar alpha
 end_header
 {''.join(points_str)}\
 """
-    return ply, points
+    return ply, points, label
+
+
 #==============================================================================
 # Main function
 #==============================================================================
 def main(argv=None):
     print('Hello! This is XXXXXX Program')
-
-    ## Load PointNet config
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='./seg/seg_model_1.pth', help='model path')
-    opt = parser.parse_args()
-    print(opt)
-
-    ## Load PointNet model
-    num_points = 2700
-    classifier = PointNetDenseCls(num_points=num_points, k=10)
-    classifier.load_state_dict(torch.load(opt.model))
-    classifier.eval()
-
-    ### Config visualization
-    cmap = plt.cm.get_cmap("hsv", 5)
-    cmap = np.array([cmap(i) for i in range(10)])[:, :3]
-    # gt = cmap[seg - 1, :]
-
 
     ## Initialize OpenNi
     # dist = './driver/OpenNI-Linux-x64-2.3/Redist'
@@ -195,10 +195,17 @@ def main(argv=None):
         elif chr(key) == 's':  # screen capture
             print("\ts key detected. Saving image {}".format(s))
 
+            ### crop the image
+            rgb = rgb[80:160, 120:200, :]
+            dmap = dmap[80:160, 120:200]
 
-            rgb = rgb[60:180, 80:240, :]
-            dmap = dmap[60:180, 80:240]
-            ply_content, points_content = generate_ply_from_rgbd(rgb=rgb, depth=dmap, config=CAMERA_CONFIG)
+            ### get hsv image
+            hsv = cv2.cvtColor(src=rgb, code=cv2.COLOR_BGR2HSV)
+            ### get black area
+            tblack = cv2.inRange(hsv, (100, 130, 0), (130, 220, 150))
+            ### get white area
+            twhite = cv2.inRange(hsv, (0, 0, 230, 0), (160, 200, 255, 0))
+            ply_content, points_content, label_content = generate_ply_from_rgbd(rgb=rgb, depth=dmap, config=CAMERA_CONFIG)
 
             cv2.imwrite(saving_folder_path + "RGB/" + str(s) + '.png', rgb)
             cv2.imwrite(saving_folder_path + "D/" + str(s) + '.png', dmap)
@@ -209,21 +216,6 @@ def main(argv=None):
             print(saving_folder_path + "PC/" + str(s) + '.ply', ' done')
             s += 1  # uncomment for multiple captures
 
-            # ### Get pointcloud of scene for prediction
-            # points_np = (np.array(points_content)[:, :3]).astype(np.float32)
-            # choice = np.random.choice(len(points_np), num_points, replace=True)
-            # points_np = points_np[choice, :]
-            # points_torch = torch.from_numpy(points_np)
-            #
-            # points_torch = points_torch.transpose(1, 0).contiguous()
-            #
-            # points_torch = Variable(points_torch.view(1, points_torch.size()[0], points_torch.size()[1]))
-            #
-            # ### Predict to segment scene
-            # pred, _ = classifier(points_torch)
-            # pred_choice = pred.data.max(2)[1]
-            # print(pred_choice)
-
         ## Streams
         # RGB
         rgb = get_rgb(rgb_stream=rgb_stream, h=h, w=w)
@@ -233,8 +225,23 @@ def main(argv=None):
 
         # canvas
         canvas = np.hstack((rgb, d4d))
+        cv2.rectangle(canvas, (119, 79), (202, 162), (0, 255, 0), 1)
+        cv2.rectangle(canvas, (119 + 320, 79), (202 + 320, 162), (0, 255, 0), 1)
         ## Display the stream syde-by-side
         cv2.imshow('depth || rgb', canvas)
+
+        hsv = cv2.cvtColor(src=rgb, code=cv2.COLOR_BGR2HSV)
+
+        ### for black
+        # tblack = cv2.inRange(hsv, (low_H, low_S, low_V), (high_H, high_S, high_V))
+        tblack = cv2.inRange(hsv, (100, 180, 0), (130, 255, 150))
+
+        ### for white
+        # twhite = cv2.inRange(hsv, (low_H, low_S, low_V), (high_H, high_S, high_V))
+        twhite = cv2.inRange(hsv, (0, 0, 230, 0), (100, 200, 255, 0))
+
+        cv2.imshow('black', tblack)
+        cv2.imshow('white', twhite)
     # end while
 
     ## Release resources
