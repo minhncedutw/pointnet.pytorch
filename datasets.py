@@ -41,6 +41,7 @@ class PartDataset(data.Dataset):
             dir_seg = os.path.join(self.root, self.cat[item], 'points_label')
             #print(dir_point, dir_seg)
             fns = sorted(os.listdir(dir_point))
+            np.random.shuffle(fns)
             if train:
                 fns = fns[:int(len(fns) * 0.8)]
             else:

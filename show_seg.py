@@ -22,9 +22,9 @@ import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--model', type=str, default='./seg/seg_model_29_0.952.pth', help='model path')
-parser.add_argument('--cat', type=str, default='Chair', help='category name')
-parser.add_argument('--idx', type=int, default=100, help='data index')
+parser.add_argument('--model', type=str, default='./seg/seg_model_29_0.810.pth', help='model path')
+parser.add_argument('--cat', type=str, default='tools', help='category name')
+parser.add_argument('--idx', type=int, default=0, help='data index')
 
 opt = parser.parse_args()
 print (opt)
@@ -40,7 +40,7 @@ print("model %d/%d" %( idx, len(d)))
 
 point_np, seg = d[idx]
 point = torch.from_numpy(point_np)
-# point_np[:, 2] *= -1
+point_np[:, 2] *= -1
 
 cmap = plt.cm.get_cmap("hsv", 5)
 cmap = np.array([cmap(i) for i in range(10)])[:,:3]
